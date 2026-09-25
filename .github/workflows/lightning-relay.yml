@@ -1,0 +1,47 @@
+name: lightning-relay
+
+# Ingestão de atividade elétrica (GOES-19 / GLM) do PraiasHoje.
+#
+# Mora num repositório PÚBLICO de propósito: em repo público o runner padrão
+# do GitHub Actions não consome minutos da cota do plano Free, e este job roda
+# 48 vezes por dia (~970 min/mês, quase metade da cota da conta quando rodava
+# no repo privado `praias-hoje`). O script é autocontido e não tem nada
+# sensível; os segredos ficam em Settings -> Secrets e são mascarados no log.
+#
+# Quem dispara é o cron do cPanel (`lightning-cron.php`, 0 e 30 de cada hora),
+# via API de workflow_dispatch. Não há `schedule` aqui: no plano Free ele é
+# best-effort e chegou a disparar 2 vezes em 17 horas.
+#
+# Só existe workflow_dispatch: pull request e fork não disparam nada, então
+# ninguém de fora consegue rodar código com os secrets.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lightning-relay
+  # Um snapshot atrasado não tem valor: a execução nova substitui a antiga.
+  cancel-in-progress: true
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install --quiet netCDF4 numpy requests
+
+      - name: Ingerir GLM e publicar
+        run: python lightning/ingest_glm.py
+        env:
+          LIGHTNING_UPLOAD_URL: ${{ secrets.LIGHTNING_UPLOAD_URL }}
+          LIGHTNING_UPLOAD_SECRET: ${{ secrets.LIGHTNING_UPLOAD_SECRET }}
+          RELAY_SIGNING_SECRET: ${{ secrets.RELAY_SIGNING_SECRET }}
