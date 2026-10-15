@@ -1,0 +1,121 @@
+name: relay-buscar-indice
+
+# Monta o índice do Buscador de Praias por Condições (/buscar) do PraiasHoje
+# e publica em api.floripatrip.com, onde o navegador do visitante o busca.
+#
+# Mora num repositório PÚBLICO pelo mesmo motivo do lightning-relay: aqui o
+# runner padrão não consome a cota de 2.000 min/mês da conta (no privado
+# `praias-hoje` este job era ~250 min só na primeira metade de outubro/2026).
+#
+# DIFERENÇA PRO LIGHTNING: o código NÃO está neste repositório. O índice nasce
+# das funções de `src/lib` do PraiasHoje, que é privado e continua privado —
+# o job faz checkout de `L40n3/praias-hoje` (branch `main`) com uma deploy key
+# SÓ DE LEITURA daquele repo (secret PRAIAS_HOJE_DEPLOY_KEY). Nenhum código
+# do PraiasHoje é publicado; o que fica público é o LOG deste job (os secrets
+# são mascarados nele). Ao mexer no script, edite no `praias-hoje`.
+#
+# Quem dispara é o cron do cPanel (`buscar-cron.php` no `praias-hoje`), via
+# API de workflow_dispatch. O `workflow_run` depois do relay-balneabilidade
+# diário que existia lá não atravessa repositórios; o cron de 2 em 2 horas
+# cobre (o boletim novo chega ao índice em no máximo 2h).
+#
+# Só existe workflow_dispatch: pull request e fork não disparam nada, então
+# ninguém de fora consegue rodar código com os secrets.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: relay-buscar-indice
+  # Um índice atrasado não tem valor: a execução nova substitui a anterior.
+  cancel-in-progress: true
+
+jobs:
+  indice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: L40n3/praias-hoje
+          ref: main
+          ssh-key: ${{ secrets.PRAIAS_HOJE_DEPLOY_KEY }}
+          persist-credentials: false
+
+      - id: sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Bundle chaveado pelo commit do praias-hoje: hit = pula npm ci +
+      # esbuild; miss = reconstrói e salva pros próximos runs.
+      - name: Restaurar bundle do índice
+        id: bundle
+        uses: actions/cache@v4
+        with:
+          path: .cache-scripts/relay-buscar-indice.cjs
+          key: buscar-bundle-${{ steps.sha.outputs.sha }}
+
+      - name: Instalar dependências (só sem bundle em cache)
+        if: steps.bundle.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Empacotar o script do índice (só sem bundle em cache)
+        if: steps.bundle.outputs.cache-hit != 'true'
+        run: node scripts/build-script.mjs scripts/relay-buscar-indice.ts
+
+      - name: Montar o índice (1.751 praias)
+        run: node .cache-scripts/relay-buscar-indice.cjs
+        env:
+          RELAY_OUT_DIR: ${{ github.workspace }}/relay-out
+          # OBRIGATÓRIO: sem o relay de balneabilidade o RJ re-parseia ~35
+          # PDFs POR PRAIA (411 s em vez de 18 s, medido em 2026-09-08).
+          BALNEABILIDADE_RELAY_BASE_URL: https://api.floripatrip.com
+          # Com o segredo, cada <uf>.json da balneabilidade precisa vir
+          # assinado — o índice não leva arquivo forjado pro navegador.
+          RELAY_SIGNING_SECRET: ${{ secrets.RELAY_SIGNING_SECRET }}
+
+      - name: Publicar em api.floripatrip.com
+        run: node scripts/relay-buscar-upload.mjs
+        env:
+          RELAY_OUT_DIR: ${{ github.workspace }}/relay-out
+          BUSCAR_UPLOAD_URL: ${{ secrets.BUSCAR_UPLOAD_URL }}
+          BUSCAR_UPLOAD_SECRET: ${{ secrets.BUSCAR_UPLOAD_SECRET }}
+          RELAY_SIGNING_SECRET: ${{ secrets.RELAY_SIGNING_SECRET }}
+
+      - name: Resumo
+        if: always()
+        run: |
+          echo "### relay-buscar-indice (praias-hoje@${{ steps.sha.outputs.sha }})" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f relay-out/buscar/indice.json ]; then
+            node -e '
+              const i = require("./relay-out/buscar/indice.json");
+              console.log("- gerado em: " + i.geradoEm);
+              console.log("- praias: " + i.praias.length);
+              const c = i.cobertura || {};
+              for (const [f, v] of Object.entries(c)) {
+                console.log("- " + f + ": " + v.atende + " atendem / " + v.naoAtende + " nao / " + v.semDado + " sem dado");
+              }
+            ' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- (índice não foi gerado)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f relay-out/buscar/destaques.json ]; then
+            node -e '
+              const d = require("./relay-out/buscar/destaques.json");
+              console.log("#### destaques da home");
+              for (const m of ["hoje", "banho", "surf"]) {
+                const x = d.modos[m][0];
+                console.log("- " + m + ": " + (x ? "#" + x.posicao + " " + x.praiaNome + " (" + x.cidadeNome + "/" + x.uf.toUpperCase() + ", " + x.nivel + ")" : "nenhuma praia destacável"));
+              }
+              const c = d.contagens;
+              console.log("- água própria: " + c.aguaPropria + " de " + c.comBoletim + " com boletim · aviso INMET: " + c.comAvisoInmet + " · baleia: " + c.comBaleia);
+            ' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- (destaques não foram gerados)" >> "$GITHUB_STEP_SUMMARY"
+          fi

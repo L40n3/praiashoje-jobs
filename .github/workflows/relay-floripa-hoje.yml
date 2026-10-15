@@ -1,0 +1,69 @@
+name: relay-floripa-hoje
+
+# Monta o retrato de dados de praia do FloripaTrip (EntradaRelay,
+# floripatrip2027/src/lib/dados/contrato.ts) com as bibliotecas do PraiasHoje
+# (swell, guarda-vidas, maré, INMET) e publica em api.floripatrip.com.
+#
+# Repositório PÚBLICO pelo motivo do lightning-relay (não consome a cota de
+# minutos da conta). Como o relay-buscar-indice, o código é do `praias-hoje`
+# (privado): checkout de `L40n3/praias-hoje@main` com a deploy key só de
+# leitura PRAIAS_HOJE_DEPLOY_KEY. Ao mexer no script, edite no `praias-hoje`
+# (scripts/relay-floripa-hoje.ts).
+#
+# Quem dispara é o cron do cPanel (`floripa-hoje-cron.php` no `praias-hoje`),
+# via workflow_dispatch. Sem `schedule`, sem gatilho de PR/fork.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: relay-floripa-hoje
+  cancel-in-progress: false
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: L40n3/praias-hoje
+          ref: main
+          ssh-key: ${{ secrets.PRAIAS_HOJE_DEPLOY_KEY }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Montar retrato (15 praias do FloripaTrip)
+        run: node_modules/.bin/tsx scripts/relay-floripa-hoje.ts
+        env:
+          RELAY_OUT_DIR: ${{ github.workspace }}/relay-out
+
+      - name: Publicar em api.floripatrip.com
+        run: node scripts/relay-floripa-hoje-upload.mjs
+        env:
+          RELAY_OUT_DIR: ${{ github.workspace }}/relay-out
+          FLORIPAHOJE_UPLOAD_URL: ${{ secrets.FLORIPAHOJE_UPLOAD_URL }}
+          FLORIPAHOJE_UPLOAD_SECRET: ${{ secrets.FLORIPAHOJE_UPLOAD_SECRET }}
+          # HMAC-SHA256, chave "floripa-hoje" (src/lib/relay/assinatura.ts).
+          RELAY_SIGNING_SECRET: ${{ secrets.RELAY_SIGNING_SECRET }}
+
+      - name: Resumo
+        if: always()
+        run: |
+          echo "### relay-floripa-hoje" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f relay-out/floripa-hoje/floripa-hoje.json ]; then
+            node -e 'const c=require("./relay-out/floripa-hoje/floripa-hoje.json");
+              const semDado=c.praias.filter(p=>p.mar?.estado==="sem_dado").map(p=>p.slug);
+              console.log("gerado_em: "+c.gerado_em+"\npraias: "+c.praias.length+"\nlocais: "+(c.locais||[]).length+"\nsem dado de mar: "+(semDado.join(", ")||"nenhuma"));' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "floripa-hoje.json não gerado — o coletor falhou antes de escrever." >> "$GITHUB_STEP_SUMMARY"
+          fi
