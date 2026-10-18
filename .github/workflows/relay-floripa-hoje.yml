@@ -46,6 +46,8 @@ jobs:
         run: node_modules/.bin/tsx scripts/relay-floripa-hoje.ts
         env:
           RELAY_OUT_DIR: ${{ github.workspace }}/relay-out
+          # Confere a assinatura do relay anterior antes de reaproveitar o laudo do IMA.
+          RELAY_SIGNING_SECRET: ${{ secrets.RELAY_SIGNING_SECRET }}
 
       - name: Publicar em api.floripatrip.com
         run: node scripts/relay-floripa-hoje-upload.mjs
