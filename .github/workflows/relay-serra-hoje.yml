@@ -1,0 +1,84 @@
+name: relay-serra-hoje
+
+# Condições das duas serras (neblina, geada, neve, melhor horário em
+# mirante, alerta de gelo) a partir do Open-Meteo, publicadas em
+# api.floripatrip.com para o serracatarinensetrip e o serragauchatrip.
+#
+# O código mora aqui mesmo (serra-hoje/), como o do lightning: não depende
+# de nada do praias-hoje e não tem nada sensível. Contrato e índices em
+# serra-hoje/README.md.
+#
+# Quem dispara é o cron do cPanel (serra-hoje/php/serra-hoje-cron.php), via
+# workflow_dispatch. Sem `schedule`, sem gatilho de PR/fork.
+#
+# Sem os secrets SERRAHOJE_UPLOAD_*, o job monta o retrato e para antes de
+# publicar: dá para conferir a coleta antes de o relay existir.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: relay-serra-hoje
+  # Um retrato novo substitui o que ainda está rodando.
+  cancel-in-progress: true
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Secret não entra em `if:`; o env do job, sim.
+      TEM_UPLOAD: ${{ secrets.SERRAHOJE_UPLOAD_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Testes dos índices
+        run: node --test serra-hoje/indices.test.mjs
+
+      - name: Montar retratos (Open-Meteo)
+        run: node serra-hoje/coletar.mjs
+        env:
+          RELAY_OUT_DIR: ${{ github.workspace }}/relay-out
+          # 'sombra' até o Laone liberar a exibição; os sites só mostram com 'publico'.
+          SERRA_HOJE_ESTADO: ${{ vars.SERRA_HOJE_ESTADO || 'sombra' }}
+
+      - name: Publicar em api.floripatrip.com
+        if: env.TEM_UPLOAD == 'true'
+        run: node serra-hoje/upload.mjs
+        env:
+          RELAY_OUT_DIR: ${{ github.workspace }}/relay-out
+          SERRAHOJE_UPLOAD_URL: ${{ secrets.SERRAHOJE_UPLOAD_URL }}
+          SERRAHOJE_UPLOAD_SECRET: ${{ secrets.SERRAHOJE_UPLOAD_SECRET }}
+          RELAY_SIGNING_SECRET: ${{ secrets.RELAY_SIGNING_SECRET }}
+
+      - name: Resumo
+        if: always()
+        run: |
+          echo "### relay-serra-hoje" >> "$GITHUB_STEP_SUMMARY"
+          for site in sc sg; do
+            f="relay-out/serra-hoje/serra-hoje-$site.json"
+            if [ -f "$f" ]; then
+              node -e '
+                const r = require(process.argv[1]);
+                const linhas = r.pontos.map((p) => {
+                  const d = p.dias[0];
+                  const mh = d.melhor_horario?.melhor;
+                  return `| ${p.nome} | ${d.geada.nivel ?? "?"} | ${d.neve.nivel ?? "?"} | ${mh ? mh.inicio + " às " + mh.fim : (d.melhor_horario ? "nenhum (" + d.melhor_horario.motivo + ")" : "")} | ${p.gelo ? p.gelo.janelas_alerta.length : ""} |`;
+                });
+                console.log(`\n**${r.site}** · gerado_em ${r.gerado_em} · estado ${r.estado}\n\n| ponto | geada hoje | neve hoje | melhor horário | alertas de gelo |\n|---|---|---|---|---|\n` + linhas.join("\n"));
+              ' "$PWD/$f" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "$site: retrato não gerado — o coletor falhou antes de escrever." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+          if [ "$TEM_UPLOAD" != "true" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Sem SERRAHOJE_UPLOAD_URL: retrato montado e não publicado." >> "$GITHUB_STEP_SUMMARY"
+          fi
