@@ -54,9 +54,9 @@ Comparação entre o que os índices 0.1.0 teriam dito e o que as estações aut
 - **Com 1 e 2 dias:** os dados guardados não têm as variáveis, então não há como julgar.
 - **A referência é a própria regra aplicada ao medido**, sem a temperatura do asfalto. É o item com menos base, e continua só como alerta.
 
-## O que proponho (nada aplicado)
+## O que proponho
 
-1. **Neve só para hoje e amanhã.** Tirar D+2 e D+3 do retrato: com dois dias de antecedência o modelo não viu nenhum dos três episódios.
+1. **Neve só para hoje e amanhã.** Tirar D+2 e D+3 do retrato: com dois dias de antecedência o modelo não viu nenhum dos três episódios. *Aplicada em 21/10/2026, a pedido do Laone.*
 2. **No texto, a neblina "provável" e o dia sem janela podem ser afirmados com mais força; a ausência de neblina, não.** Sugestão para a fase 4: "a previsão não indica neblina" em vez de "céu aberto", e sempre o horário do dado.
 3. **Correção de temperatura por ponto para a geada, só depois de testar em 2026.**
    - Em 2025, somar −1 °C à previsão em Cambará fez a geada "possível" subir de 53% para 74% das madrugadas frias, com alarme falso de 0% para 13%.

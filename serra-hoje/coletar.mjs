@@ -35,9 +35,12 @@ const OUT_DIR = path.join(process.env.RELAY_OUT_DIR ?? path.resolve('relay-out')
 const ESTADO = process.env.SERRA_HOJE_ESTADO === 'publico' ? 'publico' : 'sombra';
 const DATA_REPROCESSO = /^\d{4}-\d{2}-\d{2}$/.test(process.env.SERRA_HOJE_DATA ?? '') ? process.env.SERRA_HOJE_DATA : null;
 
-// Hoje e amanhã vão hora a hora; geada e neve vão até D+3.
+// Hoje e amanhã vão hora a hora; a geada vai até D+3.
 const DIAS_HORARIOS = 2;
 const DIAS_RESUMO = 4;
+// Neve só hoje e amanhã: no inverno de 2025, com dois dias de antecedência o
+// modelo não viu nenhum dos três episódios (validacao/inverno-2025.md).
+const DIAS_NEVE = 2;
 
 export const HORARIAS = {
   temp: 'temperature_2m',
@@ -144,8 +147,8 @@ function montarPonto(ponto, resposta, hoje) {
       nascer: iDaily >= 0 ? daily.sunrise?.[iDaily]?.slice(11, 16) ?? null : null,
       por: iDaily >= 0 ? daily.sunset?.[iDaily]?.slice(11, 16) ?? null : null,
       geada: nivelGeada(horas, s),
-      neve: nivelNeve(horas, s, ponto.altitude),
     };
+    if (d < DIAS_NEVE) dia.neve = nivelNeve(horas, s, ponto.altitude);
     if (ponto.tipo === 'mirante' && d < DIAS_HORARIOS) dia.melhor_horario = melhorHorario(horas, s);
     return dia;
   });

@@ -131,6 +131,9 @@ test('retrato: um arquivo por site, com o dia de hoje e os pontos do catálogo',
   assert.equal(mirante.dias.length, 4);
   assert.ok(mirante.dias[0].melhor_horario);
   assert.equal(mirante.dias[2].melhor_horario, undefined);
+  assert.ok(mirante.dias[1].neve);
+  assert.equal(mirante.dias[2].neve, undefined);
+  assert.ok(mirante.dias[3].geada);
   assert.deepEqual(mirante.gelo.janelas_alerta, []);
   assert.equal(r.sg.pontos.find((p) => p.id === 'gramado').gelo, undefined);
 });
