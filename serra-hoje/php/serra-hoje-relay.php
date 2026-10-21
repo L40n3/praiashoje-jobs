@@ -33,8 +33,11 @@ if (is_string($origem) && (
     || preg_match('#^http://(localhost|127\.0\.0\.1):\d{2,5}$#', $origem)
 )) {
     header('Access-Control-Allow-Origin: ' . $origem);
-    header('Vary: Origin');
 }
+// Sempre, não só quando a origem é permitida: sem isso, a resposta de quem
+// abriu a URL direto (sem Origin, sem permissão) fica no cache do navegador
+// e a leitura do site, logo depois, falha no CORS (visto em 20/10/2026).
+header('Vary: Origin');
 header('Access-Control-Allow-Methods: GET, HEAD, OPTIONS');
 header('Access-Control-Allow-Headers: If-None-Match');
 header('Access-Control-Expose-Headers: ETag, Last-Modified, X-Relay-Signature, X-Relay-Signed-At');
