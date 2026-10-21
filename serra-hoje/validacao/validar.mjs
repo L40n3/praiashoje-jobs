@@ -378,7 +378,8 @@ async function main() {
       continue;
     }
     const comDado = [...est.horas].filter(([t, m]) => t >= inicio && t <= `${fim}T23:00` && m.temp !== null).length;
-    if (comDado < 24 * 20) {
+    // --min-horas: abaixo disso a estação não entra (padrão: 20 dias de horas medidas).
+    if (comDado < Number(args['min-horas'] ?? 24 * 20)) {
       log(`${codigo} (${est.meta.nome}): só ${comDado} horas medidas no período, pulando`);
       continue;
     }

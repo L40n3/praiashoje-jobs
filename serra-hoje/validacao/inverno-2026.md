@@ -11,7 +11,7 @@ Segunda rodada, de 1º de maio a 30 de setembro de 2026, com os mesmos índices 
 - **Ficaram de fora:**
   - um arquivo inteiro em branco, de estação desconhecida;
   - o de "São Francisco de Paula", que pela pressão é de uma estação a uns 360 m de altitude e não pode ser a B820;
-  - São Joaquim (A815), que veio só de setembro e outubro, e sem dado de 02/09 a 09/10.
+  - São Joaquim (A815) e Morro da Igreja (A845), sem nenhum dado de maio a setembro, nem na segunda exportação. As duas voltaram a medir em outubro (seção abaixo). O arquivo em branco da primeira leva não dá para identificar, porque uma exportação vazia sai igual para qualquer estação.
 
   **Não há nenhuma estação catarinense em 2026.**
 - **Previsto e referências:** os mesmos de 2025. Neblina é umidade de 97% ou mais. Geada é mínima da madrugada até 3 °C ou até 1 °C. Antecedência 0 são as previsões arquivadas; 1 e 2 são as previsões feitas dias antes, sem as variáveis de neblina, solo e isoterma.
@@ -48,6 +48,32 @@ Teste: somar −1 °C à temperatura prevista só no cálculo da geada. A corre�
 
 **Em Cambará, 2026 não serve de prova:** teve só 3 madrugadas frias com dado.
 
+## Outubro de 2026 no Morro da Igreja: o primeiro mirante medido
+
+A A845 (Morro da Igreja, 1.790 m) ficou sem dado de maio a setembro e voltou a medir em 10/10/2026 às 16h. São Joaquim (A815) voltou em 09/10. A exportação de 21/10 dá de 10 a 20/10. É pouco, mas é a primeira vez que o índice é comparado com uma estação no próprio mirante.
+
+Horas das 06h às 19h. Previsto: `#` provável, `~` possível, `.` sem neblina. Medido: `#` umidade de 97% ou mais, `.` abaixo, `?` sem dado.
+
+```
+dia         previsto       | medido         | melhor horário previsto
+2026-10-14  ###..~...~#~## | ????....###### | 09:00-11:00
+2026-10-15  #......~~~~~~# | ...........### | 07:00-12:00
+2026-10-16  ............~# | ####....###### | 06:00-15:00
+2026-10-17  ~............. | .............. | 07:00-19:00
+2026-10-18  .............. | .............. | 06:00-19:00
+2026-10-19  ............~# | ...........??? | 06:00-18:00
+2026-10-20  ##.........~## | ????#.....##?? | 08:00-17:00
+```
+
+- **Acertou bem 15, 17, 18 e 19/10.**
+- **Em 14 e 20/10 errou o horário:** a neblina chegou 1 a 2 horas antes ou depois do previsto.
+- **Em 16/10 errou feio:** previu céu aberto das 06h às 15h, e o mirante ficou na nuvem até as 9h e de novo a partir das 14h.
+- **Por isso a conta hora a hora sai fraca** (o "provável" pegou 2 de 19 horas de neblina), embora o desenho do dia esteja certo na maioria dos dias.
+- **A janela prevista foi limpa em 86% das horas**, contra 76% no dia inteiro.
+- **A mínima saiu 1,3 °C mais fria que a medida no Morro da Igreja e 0,8 °C em São Joaquim.** É o mesmo sinal de São Joaquim em 2025: na serra catarinense, a previsão erra para o frio. É o contrário dos Campos de Cima da Serra, e reforça que a correção de −1 °C não vale para SC.
+
+Consequência para a fase 4: o bloco do mirante deve falar em período ("manhã fechada, tarde aberta"), não em hora cravada, e dizer que a neblina no topo pode entrar antes do previsto.
+
 ## O que proponho
 
 1. **Correção de −1 °C só no cálculo da geada**, nos pontos dos Campos de Cima da Serra do catálogo: Cambará do Sul, Itaimbezinho e Fortaleza.
@@ -60,10 +86,8 @@ Teste: somar −1 °C à temperatura prevista só no cálculo da geada. A corre�
    - a neblina "provável", com a ressalva de sempre;
    - a ausência de neblina vira "a previsão não indica neblina";
    - a janela do melhor horário entra como orientação, não como promessa.
-3. **Ainda falta medir mirante em SC.** Para isso, refazer a exportação de maio a setembro de 2026:
-   - A815, São Joaquim;
-   - A845, Morro da Igreja, se o arquivo em branco não era ela;
-   - B820, São Francisco de Paula, conferindo o nome antes de baixar.
+3. **Não há inverno de 2026 em SC:** A815 e A845 estavam fora do ar de maio a setembro. O mirante passa a ser medido daqui para frente, comparando o histórico do servidor (o que o retrato disse de fato) com a A845. Exportar a A845 de novo no fim de novembro e no fim do inverno de 2027.
+4. **Falta só a B820 (São Francisco de Paula)** para a serra gaúcha, conferindo o nome antes de baixar.
 
 ## Tabelas
 
