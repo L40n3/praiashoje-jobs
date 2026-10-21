@@ -17,7 +17,7 @@
  *   - dado ausente vira null e nunca vira "sem".
  */
 
-export const INDICES_VERSAO = '0.1.0';
+export const INDICES_VERSAO = '0.2.0';
 
 export const LIMIARES = {
   neblina: {
@@ -135,8 +135,12 @@ export function melhorHorario(horas, s) {
   return { janelas: saida, melhor, motivo };
 }
 
-/** Geada na madrugada do dia. */
-export function nivelGeada(horas, s) {
+/**
+ * Geada na madrugada do dia. `ajuste` (°C) soma à mínima prevista antes dos
+ * limiares: é a correção de viés por ponto do catálogo (pontos.mjs,
+ * `ajusteGeada`). Só a geada usa; a série hora a hora segue a do modelo.
+ */
+export function nivelGeada(horas, s, ajuste = 0) {
   const L = LIMIARES.geada;
   const madrugada = horas.filter((i) => Number(s.t[i].slice(11, 13)) <= L.horaFim);
   const temps = madrugada.map((i) => num(s.temp[i]));
@@ -147,7 +151,7 @@ export function nivelGeada(horas, s) {
     const v = num(s.temp[i]);
     if (v !== null && (iMin === null || v < num(s.temp[iMin]))) iMin = i;
   }
-  const tmin = num(s.temp[iMin]);
+  const tmin = num(s.temp[iMin]) + ajuste;
   const solos = madrugada.map((i) => num(s.solo[i])).filter((v) => v !== null);
   const soloMin = solos.length ? Math.min(...solos) : null;
   const vento = num(s.vento[iMin]);
@@ -174,6 +178,7 @@ export function nivelGeada(horas, s) {
     solo_min: arred(soloMin, 1),
     vento_kmh: arred(vento, 0),
     nuvem_pct: arred(nuvem, 0),
+    ...(ajuste ? { ajuste_c: ajuste } : {}),
   };
 }
 

@@ -73,6 +73,18 @@ test('geada: 2 °C com céu encoberto e vento não passa de possível', () => {
   assert.equal(nivelGeada(todas, serie({ temp, nuvem: Array(24).fill(50), vento: Array(24).fill(12) })).nivel, 'possivel');
 });
 
+test('geada: o ajuste do ponto entra na mínima antes dos limiares', () => {
+  const temp = Array(24).fill(8);
+  temp[5] = 2.8;
+  const s = serie({ temp, nuvem: Array(24).fill(10), vento: Array(24).fill(4) });
+  assert.equal(nivelGeada(todas, s).nivel, 'possivel');
+  const r = nivelGeada(todas, s, -1);
+  assert.equal(r.nivel, 'provavel');
+  assert.equal(r.tmin, 1.8);
+  assert.equal(r.ajuste_c, -1);
+  assert.equal(nivelGeada(todas, s).ajuste_c, undefined);
+});
+
 test('geada: abaixo de -1 °C basta o frio', () => {
   const temp = Array(24).fill(3);
   temp[6] = -1.5;
@@ -136,4 +148,10 @@ test('retrato: um arquivo por site, com o dia de hoje e os pontos do catálogo',
   assert.ok(mirante.dias[3].geada);
   assert.deepEqual(mirante.gelo.janelas_alerta, []);
   assert.equal(r.sg.pontos.find((p) => p.id === 'gramado').gelo, undefined);
+  // Campos de Cima da Serra: −1 °C só na geada; a série hora a hora não muda.
+  const itaimbezinho = r.sg.pontos.find((p) => p.id === 'itaimbezinho');
+  assert.equal(itaimbezinho.dias[0].geada.tmin, 4);
+  assert.equal(itaimbezinho.dias[0].geada.ajuste_c, -1);
+  assert.equal(itaimbezinho.horas.temp[0], 5);
+  assert.equal(r.sg.pontos.find((p) => p.id === 'gramado').dias[0].geada.tmin, 5);
 });

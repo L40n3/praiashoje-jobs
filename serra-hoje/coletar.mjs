@@ -146,7 +146,7 @@ function montarPonto(ponto, resposta, hoje) {
       data,
       nascer: iDaily >= 0 ? daily.sunrise?.[iDaily]?.slice(11, 16) ?? null : null,
       por: iDaily >= 0 ? daily.sunset?.[iDaily]?.slice(11, 16) ?? null : null,
-      geada: nivelGeada(horas, s),
+      geada: nivelGeada(horas, s, ponto.ajusteGeada ?? 0),
     };
     if (d < DIAS_NEVE) dia.neve = nivelNeve(horas, s, ponto.altitude);
     if (ponto.tipo === 'mirante' && d < DIAS_HORARIOS) dia.melhor_horario = melhorHorario(horas, s);

@@ -40,7 +40,7 @@ Decisões do Laone em 20/10/2026:
 ```jsonc
 {
   "contrato": "serra-hoje/1",
-  "indices_versao": "0.1.0",
+  "indices_versao": "0.2.0",
   "estado": "sombra",              // ou "publico"
   "site": "sc",                    // ou "sg"
   "gerado_em": "2026-10-20T21:47:42.565Z",
@@ -60,7 +60,7 @@ Decisões do Laone em 20/10/2026:
     },
     "dias": [{                                  // hoje até D+3
       "data": "2026-10-20", "nascer": "05:31", "por": "18:47",
-      "geada": { "nivel": "possivel", "tmin": 0.8, "hora_tmin": "06:00", "solo_min": 1.2, "vento_kmh": 3, "nuvem_pct": 20 },
+      "geada": { "nivel": "possivel", "tmin": 0.8, "hora_tmin": "06:00", "solo_min": 1.2, "vento_kmh": 3, "nuvem_pct": 20 },  // + "ajuste_c": -1 nos pontos com correção
       "neve": { "nivel": "sem_sinal", "neve_cm": 0, "chuva_mm": 0, "isoterma_min_m": null, "margem_min_m": null },  // só hoje e amanhã
       "melhor_horario": {                       // só mirante, só hoje e amanhã
         "janelas": [{ "inicio": "08:00", "fim": "18:00", "horas": 10, "vis_min_m": 8400 }],
@@ -77,13 +77,13 @@ Decisões do Laone em 20/10/2026:
 
 `gelo` só aparece nos pontos com estrada de serra perto (`gelo: true` no catálogo). `estrada` é `null` quando o nome não é certo: aí a página fala em "estradas da região".
 
-## Índices, versão 0.1.0
+## Índices, versão 0.2.0
 
 Os números estão em `LIMIARES` (`indices.mjs`) e foram escritos antes da validação. A fase de sombra ajusta.
 
 - **Neblina (hora):** `provavel` com visibilidade abaixo de 1 km, ou com ar saturado (umidade ≥ 98%, temperatura até 0,5 °C do ponto de orvalho, nuvem baixa ≥ 90%, vento abaixo de 20 km/h). `possivel` com visibilidade abaixo de 5 km, ou umidade ≥ 95%, diferença até 1,5 °C e nuvem baixa ≥ 60%.
 - **Melhor horário (mirante):** a janela seguida mais longa com sol, sem neblina e sem chuva acima de 0,3 mm/h.
-- **Geada (madrugada, 00h às 08h):** `provavel` com mínima até 2 °C, céu limpo (nuvem ≤ 30%) e vento até 10 km/h; ou mínima até −1 °C; ou chão até −1 °C com vento calmo. `possivel` com mínima até 3,5 °C, nuvem ≤ 60% e vento ≤ 15 km/h; ou mínima até 1 °C; ou chão até 0 °C. A temperatura do ar é corrigida pela altitude do ponto; a do solo é a da célula do modelo.
+- **Geada (madrugada, 00h às 08h):** `provavel` com mínima até 2 °C, céu limpo (nuvem ≤ 30%) e vento até 10 km/h; ou mínima até −1 °C; ou chão até −1 °C com vento calmo. `possivel` com mínima até 3,5 °C, nuvem ≤ 60% e vento ≤ 15 km/h; ou mínima até 1 °C; ou chão até 0 °C. A temperatura do ar é corrigida pela altitude do ponto; a do solo é a da célula do modelo. Em Cambará do Sul, Itaimbezinho e Fortaleza a mínima ganha −1 °C antes dos limiares (`ajusteGeada` em `pontos.mjs`, `ajuste_c` no retrato): nos Campos de Cima da Serra a previsão sai quente nas madrugadas (validação de 2025 e 2026). Só a geada usa o ajuste; as temperaturas hora a hora são as do modelo, e a página fala da mínima de geada pelo `geada.tmin`.
 - **Neve (dia, só hoje e amanhã):** `alta` com 1 cm ou mais de neve prevista e isoterma de 0 °C até 300 m acima do ponto nas horas com precipitação. `moderada` com 0,2 cm, ou precipitação com isoterma até 300 m acima e ar até 1 °C. `baixa` com qualquer neve prevista, ou precipitação com isoterma até 700 m acima e ar até 3 °C.
 - **Gelo (hora, só alerta):** chão até 0,5 °C ou ar até 1 °C, com chuva de 0,2 mm ou mais nas 6 horas anteriores, neve prevista ou neblina com ar saturado (sincelo).
 

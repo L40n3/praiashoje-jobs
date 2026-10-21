@@ -76,7 +76,7 @@ Consequência para a fase 4: o bloco do mirante deve falar em período ("manhã 
 
 ## O que proponho
 
-1. **Correção de −1 °C só no cálculo da geada**, nos pontos dos Campos de Cima da Serra do catálogo: Cambará do Sul, Itaimbezinho e Fortaleza.
+1. **Correção de −1 °C só no cálculo da geada**, nos pontos dos Campos de Cima da Serra do catálogo: Cambará do Sul, Itaimbezinho e Fortaleza. *Aplicada em 21/10/2026 a pedido do Laone (índices 0.2.0).*
    - A evidência é de Ausentes e Cambará, que ficam nessa região, nos dois invernos.
    - Ausentes não está no catálogo; serve de referência para a região.
    - A temperatura hora a hora continua a do modelo. O campo `geada.tmin` passa a vir corrigido, e a página usa esse valor quando falar de geada.

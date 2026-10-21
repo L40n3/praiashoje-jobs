@@ -19,11 +19,17 @@
  *   gelo     — publica janelas de alerta de gelo (estrada de serra perto)
  *   estrada  — nome da estrada, só onde ele é certo; senão o alerta fala
  *              em "estradas da região"
+ *   ajusteGeada — °C somados à mínima prevista só no cálculo da geada.
+ *              Campos de Cima da Serra: −1 °C, porque a previsão sai quente
+ *              nas madrugadas de São José dos Ausentes e de Cambará do Sul
+ *              (validação com o INMET, invernos de 2025 e 2026,
+ *              validacao/inverno-2026.md). Na serra catarinense a previsão
+ *              erra para o frio, então lá não há ajuste.
  */
 
 const DEM = 'Copernicus DEM GLO-90, API de elevação do Open-Meteo, 20/10/2026';
 
-/** @type {Array<{id:string,nome:string,site:'sc'|'sg',tipo:'mirante'|'cidade'|'atracao',lat:number,lon:number,coordFonte:string,altitude:number,altitudeFonte:string,gelo?:boolean,estrada?:string}>} */
+/** @type {Array<{id:string,nome:string,site:'sc'|'sg',tipo:'mirante'|'cidade'|'atracao',lat:number,lon:number,coordFonte:string,altitude:number,altitudeFonte:string,gelo?:boolean,estrada?:string,ajusteGeada?:number}>} */
 export const PONTOS = [
   // ── Serra Catarinense ────────────────────────────────────────────────
   { id: 'morro-da-igreja', nome: 'Morro da Igreja', site: 'sc', tipo: 'mirante', lat: -28.12721, lon: -49.48015, coordFonte: 'OSM, nó 1010835049 (mirante do Morro da Igreja)', altitude: 1787, altitudeFonte: DEM, gelo: true },
@@ -38,10 +44,10 @@ export const PONTOS = [
   { id: 'lages', nome: 'Lages', site: 'sc', tipo: 'cidade', lat: -27.816, lon: -50.326, coordFonte: 'serracatarinensetrip, centro do mapa do hub', altitude: 917, altitudeFonte: DEM },
 
   // ── Serra Gaúcha ─────────────────────────────────────────────────────
-  { id: 'itaimbezinho', nome: 'Cânion Itaimbezinho', site: 'sg', tipo: 'mirante', lat: -29.15831, lon: -50.07856, coordFonte: 'OSM, nó 287169829 (Itaimbezinho)', altitude: 917, altitudeFonte: DEM },
-  { id: 'fortaleza', nome: 'Cânion Fortaleza', site: 'sg', tipo: 'mirante', lat: -29.06288, lon: -49.95646, coordFonte: 'OSM, nó 5793683653 (Cânion Fortaleza)', altitude: 1091, altitudeFonte: DEM },
+  { id: 'itaimbezinho', nome: 'Cânion Itaimbezinho', site: 'sg', tipo: 'mirante', lat: -29.15831, lon: -50.07856, coordFonte: 'OSM, nó 287169829 (Itaimbezinho)', altitude: 917, altitudeFonte: DEM, ajusteGeada: -1 },
+  { id: 'fortaleza', nome: 'Cânion Fortaleza', site: 'sg', tipo: 'mirante', lat: -29.06288, lon: -49.95646, coordFonte: 'OSM, nó 5793683653 (Cânion Fortaleza)', altitude: 1091, altitudeFonte: DEM, ajusteGeada: -1 },
   { id: 'skyglass', nome: 'Skyglass', site: 'sg', tipo: 'mirante', lat: -29.27019, lon: -50.84416, coordFonte: 'OSM, relação 12217799', altitude: 730, altitudeFonte: DEM },
-  { id: 'cambara-do-sul', nome: 'Cambará do Sul', site: 'sg', tipo: 'cidade', lat: -29.04895, lon: -50.14541, coordFonte: 'serragauchatrip, centro do mapa do hub', altitude: 1025, altitudeFonte: DEM, gelo: true, estrada: 'RS-020' },
+  { id: 'cambara-do-sul', nome: 'Cambará do Sul', site: 'sg', tipo: 'cidade', lat: -29.04895, lon: -50.14541, coordFonte: 'serragauchatrip, centro do mapa do hub', altitude: 1025, altitudeFonte: DEM, gelo: true, estrada: 'RS-020', ajusteGeada: -1 },
   { id: 'sao-francisco-de-paula', nome: 'São Francisco de Paula', site: 'sg', tipo: 'cidade', lat: -29.44845, lon: -50.5833, coordFonte: 'serragauchatrip, centro do mapa do hub', altitude: 902, altitudeFonte: DEM, gelo: true, estrada: 'RS-020' },
   { id: 'gramado', nome: 'Gramado', site: 'sg', tipo: 'cidade', lat: -29.37929, lon: -50.8737, coordFonte: 'serragauchatrip, centro do mapa do hub', altitude: 822, altitudeFonte: DEM },
   { id: 'lago-negro', nome: 'Lago Negro', site: 'sg', tipo: 'atracao', lat: -29.39496, lon: -50.87561, coordFonte: 'OSM, via 227673118 (Lago Negro)', altitude: 858, altitudeFonte: DEM },
