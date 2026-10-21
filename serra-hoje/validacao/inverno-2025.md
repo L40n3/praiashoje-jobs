@@ -63,6 +63,7 @@ Comparação entre o que os índices 0.1.0 teriam dito e o que as estações aut
    - Somar +1 °C em São Joaquim baixou o alarme falso de 68% para 58%, mas perdeu acertos.
    - Com 1 dia de antecedência, Cambará piorou.
    - Como foi calibrado e medido no mesmo inverno, não é prova. Para confirmar, são precisos os dados de 2026.
+   - *Testado com 2026 em [inverno-2026.md](inverno-2026.md): em Ausentes, a correção melhora a geada com dado novo; não há estação catarinense em 2026.*
 4. **Dados de 2026.** O arquivo anual sai por volta de março de 2027. Para não esperar, o Laone exporta à mão em tempo.inmet.gov.br os CSVs de maio a setembro de 2026 de A845 (Morro da Igreja, se tiver dado), A815, A829, A897 e B820 (São Francisco de Paula). A página tem reCAPTCHA e limita cada exportação a 6 meses. Com isso dá para testar a correção do item 3 fora da amostra e, se a A845 voltou, medir um mirante de verdade.
 5. **O histórico do servidor** (`historico/` em api.floripatrip.com) acumula, a partir de agora, o que o retrato disse de fato. Comparado com a A845 e com câmeras ao vivo, é a única forma de julgar neblina e melhor horário em mirante.
 

@@ -114,4 +114,4 @@ A API de previsões arquivadas junta as primeiras horas de cada rodada, então �
 node serra-hoje/validacao/validar.mjs --inmet <pasta> --inicio 2025-05-01 --fim 2025-09-30 --saida relatorio.md
 ```
 
-Resultado do inverno de 2025, com leitura e propostas: [validacao/inverno-2025.md](validacao/inverno-2025.md).
+Resultados, com leitura e propostas: [inverno de 2025](validacao/inverno-2025.md) e [inverno de 2026](validacao/inverno-2026.md). O CSV do botão "Baixar CSV" de tempo.inmet.gov.br também serve: ele não diz a estação, então o código precisa estar em `ESTACOES` (`validar.mjs`).

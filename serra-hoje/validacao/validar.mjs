@@ -10,9 +10,11 @@
  * graus à temperatura prevista de uma estação. Servem para testar uma
  * calibração antes de mexer no job. Relatório do inverno de 2025: inverno-2025.md.
  *
- * <pasta> tem um CSV por estação, como sai do arquivo anual do INMET
- * (portal.inmet.gov.br/dadoshistoricos), com o nome <codigo>.csv. Os CSVs não
- * vão para o git.
+ * <pasta> tem um CSV por estação, com o nome <codigo>.csv, em um de dois
+ * formatos: o do arquivo anual do INMET (portal.inmet.gov.br/dadoshistoricos),
+ * que traz a estação no cabeçalho, ou o do botão "Baixar CSV" de
+ * tempo.inmet.gov.br, que não traz: aí coordenada e altitude vêm de ESTACOES.
+ * Os CSVs não vão para o git.
  *
  * A previsão vem de duas APIs do Open-Meteo, na coordenada e altitude da
  * estação, com as mesmas funções do job (coletar.mjs, indices.mjs):
@@ -61,8 +63,44 @@ function numero(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+// Estações da serra, do cabeçalho do arquivo anual de 2025. Servem ao CSV do
+// tempo.inmet.gov.br, que não diz de onde é.
+const ESTACOES = {
+  A815: { codigo: 'A815', nome: 'SAO JOAQUIM', lat: -28.27556, lon: -49.93472, altitude: 1400 },
+  A829: { codigo: 'A829', nome: 'SAO JOSE DOS AUSENTES', lat: -28.74861, lon: -50.05778, altitude: 1229 },
+  A845: { codigo: 'A845', nome: 'BOM JARDIM DA SERRA - MORRO DA IGREJA', lat: -28.12694, lon: -49.47972, altitude: 1790 },
+  A865: { codigo: 'A865', nome: 'LAGES', lat: -27.80222, lon: -50.33556, altitude: 953 },
+  A879: { codigo: 'A879', nome: 'CANELA', lat: -29.36889, lon: -50.82722, altitude: 831 },
+  A897: { codigo: 'A897', nome: 'CAMBARA DO SUL', lat: -29.04917, lon: -50.14972, altitude: 1017 },
+};
+
+/** CSV do "Baixar CSV" de tempo.inmet.gov.br: aspas, data dd/mm/aaaa, hora "HHMM" UTC. */
+function lerInmetTabela(texto, codigo) {
+  if (!ESTACOES[codigo]) throw new Error(`${codigo}: CSV da tabela sem a estação em ESTACOES`);
+  const linhas = texto.replace(/^﻿/, '').split(/\r?\n/).filter(Boolean)
+    .map((l) => l.split(';').map((c) => c.replace(/^"|"$/g, '')));
+  const cab = linhas[0];
+  const C = {
+    chuva: cab.indexOf('Chuva (mm)'), temp: cab.indexOf('Temp. Ins. (C)'), orvalho: cab.indexOf('Pto Orvalho Ins. (C)'),
+    tminAnt: cab.indexOf('Temp. Min. (C)'), ur: cab.indexOf('Umi. Ins. (%)'), vento: cab.indexOf('Vel. Vento (m/s)'),
+  };
+  const horas = new Map();
+  for (const r of linhas.slice(1)) {
+    const [d, m, a] = r[0].split('/').map(Number);
+    const h = Number(r[1].slice(0, 2));
+    const local = new Date(Date.UTC(a, m - 1, d, h) - 3 * 3_600_000).toISOString().slice(0, 13) + ':00';
+    const vento = numero(r[C.vento]);
+    horas.set(local, {
+      chuva: numero(r[C.chuva]), temp: numero(r[C.temp]), orvalho: numero(r[C.orvalho]),
+      tminAnt: numero(r[C.tminAnt]), ur: numero(r[C.ur]), vento: vento === null ? null : vento * 3.6,
+    });
+  }
+  return { meta: ESTACOES[codigo], horas };
+}
+
 /** CSV do INMET -> { meta, horas: Map("YYYY-MM-DDTHH:00" local, medida) }. */
-export function lerInmet(texto) {
+export function lerInmet(texto, codigo) {
+  if (texto.replace(/^﻿/, '').startsWith('"Data"')) return lerInmetTabela(texto, codigo);
   const linhas = texto.split(/\r?\n/);
   const meta = {};
   for (const l of linhas.slice(0, 8)) {
@@ -331,9 +369,12 @@ async function main() {
   for (const codigo of codigos) {
     let est;
     try {
-      est = lerInmet(await readFile(path.join(inmet, `${codigo}.csv`), 'latin1'));
-    } catch {
-      log(`${codigo}: CSV não encontrado, pulando`);
+      const bruto = await readFile(path.join(inmet, `${codigo}.csv`));
+      // O arquivo anual vem em latin1; o da tabela, em UTF-8 com BOM.
+      const texto = bruto[0] === 0xef && bruto[1] === 0xbb ? bruto.toString('utf8') : bruto.toString('latin1');
+      est = lerInmet(texto, codigo);
+    } catch (e) {
+      log(`${codigo}: CSV não lido (${e.code === 'ENOENT' ? 'não encontrado' : e.message}), pulando`);
       continue;
     }
     const comDado = [...est.horas].filter(([t, m]) => t >= inicio && t <= `${fim}T23:00` && m.temp !== null).length;
