@@ -23,6 +23,7 @@ Nada passa pela Vercel: os sites são estáticos e leem o JSON no navegador, ent
 | `coletar.mjs` | chama o Open-Meteo, calcula e escreve um arquivo por site |
 | `upload.mjs` | publica os dois arquivos |
 | `indices.test.mjs` | testes (`node --test serra-hoje/indices.test.mjs`) |
+| `validacao/` | comparação com as estações do INMET e o relatório do inverno de 2025 |
 | `php/` | os três PHPs que sobem para a HostGator |
 
 ## Regras que o contrato carrega
@@ -102,3 +103,13 @@ Primeira rodada, em 20/10/2026, contra os dias de neve da página de neve do Ser
 | 06/09/2026 | Defesa Civil confirmou neve | Morro da Igreja `moderada`, demais `sem_sinal` |
 
 A API de previsões arquivadas junta as primeiras horas de cada rodada, então é o melhor caso: a previsão de verdade, de um a três dias antes, erra mais.
+
+### Contra as estações do INMET
+
+`validacao/validar.mjs` compara os índices com o que as estações automáticas do INMET mediram, nas antecedências de 0, 1 e 2 dias. Os CSVs vêm do arquivo anual do INMET, renomeados para `<codigo>.csv`, e não vão para o git:
+
+```bash
+node serra-hoje/validacao/validar.mjs --inmet <pasta> --inicio 2025-05-01 --fim 2025-09-30 --saida relatorio.md
+```
+
+Resultado do inverno de 2025, com leitura e propostas: [validacao/inverno-2025.md](validacao/inverno-2025.md).

@@ -39,7 +39,7 @@ const DATA_REPROCESSO = /^\d{4}-\d{2}-\d{2}$/.test(process.env.SERRA_HOJE_DATA ?
 const DIAS_HORARIOS = 2;
 const DIAS_RESUMO = 4;
 
-const HORARIAS = {
+export const HORARIAS = {
   temp: 'temperature_2m',
   orvalho: 'dew_point_2m',
   ur: 'relative_humidity_2m',
@@ -112,7 +112,7 @@ function hojeLocal(agora = new Date()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO, year: 'numeric', month: '2-digit', day: '2-digit' }).format(agora);
 }
 
-function series(resposta) {
+export function series(resposta) {
   const h = resposta.hourly ?? {};
   const s = { t: h.time ?? [] };
   for (const [nome, campo] of Object.entries(HORARIAS)) {
