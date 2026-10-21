@@ -44,6 +44,8 @@ const DIAS_NEVE = 2;
 
 export const HORARIAS = {
   temp: 'temperature_2m',
+  sensacao: 'apparent_temperature',
+  codigo: 'weather_code',
   orvalho: 'dew_point_2m',
   ur: 'relative_humidity_2m',
   vis: 'visibility',
@@ -68,7 +70,7 @@ function urlOpenMeteo() {
     longitude: PONTOS.map((p) => p.lon).join(','),
     elevation: PONTOS.map((p) => p.altitude).join(','),
     hourly: Object.values(HORARIAS).join(','),
-    daily: 'sunrise,sunset',
+    daily: 'sunrise,sunset,weather_code,temperature_2m_min,temperature_2m_max,precipitation_probability_max',
     timezone: FUSO,
   });
   // Ontem entra para somar a chuva das 6 h anteriores ao alerta de gelo da madrugada.
@@ -147,6 +149,14 @@ function montarPonto(ponto, resposta, hoje) {
       nascer: iDaily >= 0 ? daily.sunrise?.[iDaily]?.slice(11, 16) ?? null : null,
       por: iDaily >= 0 ? daily.sunset?.[iDaily]?.slice(11, 16) ?? null : null,
       geada: nivelGeada(horas, s, ponto.ajusteGeada ?? 0),
+      // Para o card dos sites (ícone do céu e faixa de dias). Sem correção de altitude extra nem
+      // o ajuste da geada: a mínima de geada continua sendo `geada.tmin`.
+      tempo: {
+        codigo: iDaily >= 0 ? daily.weather_code?.[iDaily] ?? null : null,
+        tmin: iDaily >= 0 ? arred(daily.temperature_2m_min?.[iDaily] ?? null, 1) : null,
+        tmax: iDaily >= 0 ? arred(daily.temperature_2m_max?.[iDaily] ?? null, 1) : null,
+        prob_chuva: iDaily >= 0 ? daily.precipitation_probability_max?.[iDaily] ?? null : null,
+      },
     };
     if (d < DIAS_NEVE) dia.neve = nivelNeve(horas, s, ponto.altitude);
     if (ponto.tipo === 'mirante' && d < DIAS_HORARIOS) dia.melhor_horario = melhorHorario(horas, s);
@@ -171,6 +181,8 @@ function montarPonto(ponto, resposta, hoje) {
       inicio: s.t[iHoje],
       passo_min: 60,
       temp: coluna(s, 'temp', iHoje, iFim, 1),
+      sensacao: coluna(s, 'sensacao', iHoje, iFim, 1),
+      codigo: s.codigo.slice(iHoje, iFim),
       orvalho: coluna(s, 'orvalho', iHoje, iFim, 1),
       ur: coluna(s, 'ur', iHoje, iFim, 0),
       vis_m: s.vis.slice(iHoje, iFim).map((v) => (v === null ? null : Math.round(v / 10) * 10)),

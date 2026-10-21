@@ -54,12 +54,13 @@ Decisões do Laone em 20/10/2026:
     "grade": { "lat": -28.1, "lon": -49.5 },   // célula do modelo que respondeu
     "horas": {                                  // hoje 00h até amanhã 23h, 48 valores por coluna
       "inicio": "2026-10-20T00:00", "passo_min": 60,
-      "temp": [], "orvalho": [], "ur": [], "vis_m": [], "nuvem": [], "nuvem_baixa": [],
+      "temp": [], "sensacao": [], "codigo": [], "orvalho": [], "ur": [], "vis_m": [], "nuvem": [], "nuvem_baixa": [],
       "vento_kmh": [], "chuva_mm": [], "prob_chuva": [], "neve_cm": [], "isoterma_m": [],
       "solo": [], "dia": [], "neblina": []      // neblina: "sem" | "possivel" | "provavel" | null
     },
     "dias": [{                                  // hoje até D+3
       "data": "2026-10-20", "nascer": "05:31", "por": "18:47",
+      "tempo": { "codigo": 3, "tmin": 4.1, "tmax": 14.4, "prob_chuva": 20 },   // para o card: ícone do dia e faixa de dias
       "geada": { "nivel": "possivel", "tmin": 0.8, "hora_tmin": "06:00", "solo_min": 1.2, "vento_kmh": 3, "nuvem_pct": 20 },  // + "ajuste_c": -1 nos pontos com correção
       "neve": { "nivel": "sem_sinal", "neve_cm": 0, "chuva_mm": 0, "isoterma_min_m": null, "margem_min_m": null },  // só hoje e amanhã
       "melhor_horario": {                       // só mirante, só hoje e amanhã
@@ -72,6 +73,8 @@ Decisões do Laone em 20/10/2026:
   }]
 }
 ```
+
+`sensacao` é a `apparent_temperature` e `codigo` o `weather_code` (WMO) do Open-Meteo; `tempo` traz o código, a mínima, a máxima e a maior chance de chuva do dia. Entraram em 21/10/2026 para o card dos sites, como campos novos do mesmo contrato. O ícone do card não usa o código para neblina nem para neve: neblina vem de `neblina` e neve do nível de `neve`, para o card não dizer o que o índice não diz. A mínima de geada continua sendo `geada.tmin`.
 
 `neve` só vem em hoje e amanhã: com dois dias de antecedência o modelo não viu nenhum episódio do inverno de 2025 ([validacao/inverno-2025.md](validacao/inverno-2025.md)). A geada vai até D+3.
 
